@@ -1,128 +1,115 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
+    const userInfo = document.getElementById('user-info');
     const userBoard = document.getElementById('user-board');
     const pcBoard = document.getElementById('pc-board');
-    const info = document.getElementById('info');
     const newGameBtn = document.getElementById('new-game-btn');
-    const toggleDirectionBtn = document.getElementById('toggle-direction-btn');
-  
+
     let userShips = [
-      { size: 5, name: "carrier", positions: [], placed: false },
-      { size: 4, name: "battleship", positions: [], placed: false },
-      { size: 3, name: "cruiser", positions: [], placed: false },
-      { size: 3, name: "submarine", positions: [], placed: false },
-      { size: 2, name: "destroyer", positions: [], placed: false }
+        { name: "Carrier", size: 5, hits: 0, placed: false, positions: [] },
+        { name: "Battleship", size: 4, hits: 0, placed: false, positions: [] },
+        { name: "Cruiser", size: 3, hits: 0, placed: false, positions: [] },
+        { name: "Submarine", size: 3, hits: 0, placed: false, positions: [] },
+        { name: "Destroyer", size: 2, hits: 0, placed: false, positions: [] }
     ];
-  
-    let pcShips = [
-      { size: 5, positions: [] },
-      { size: 4, positions: [] },
-      { size: 3, positions: [] },
-      { size: 3, positions: [] },
-      { size: 2, positions: [] }
-    ];
-  
-    let direction = 'horizontal';
-    let gameEnded = false;
-  
-    toggleDirectionBtn.addEventListener('click', function() {
-      direction = direction === 'horizontal' ? 'vertical' : 'horizontal';
-      toggleDirectionBtn.textContent = `Toggle Direction (${direction.charAt(0).toUpperCase() + direction.slice(1)})`;
-    });
-  
-    createGrid(userBoard, true);
-    createGrid(pcBoard, false);
-    initializeGame();
-  
-    document.querySelectorAll('.ship').forEach(ship => {
-      ship.addEventListener('dragstart', handleDragStart);
-    });
-  
-    function handleDragStart(e) {
-      e.dataTransfer.setData('text/plain', e.target.id);
-    }
-  
-    userBoard.addEventListener('dragover', e => {
-      e.preventDefault(); // Necessary to allow dropping
-    });
-  
-    userBoard.addEventListener('drop', handleDrop);
-  
-    function handleDrop(e) {
-      e.preventDefault();
-      if (gameEnded) return;
-  
-      const shipId = e.dataTransfer.getData('text/plain');
-      const ship = document.getElementById(shipId);
-      const size = parseInt(ship.getAttribute('data-length'));
-      const cellIndex = parseInt(e.target.dataset.index);
-      
-      if (canPlaceShipAt(cellIndex, size, direction, userShips)) {
-        placeShip(shipId, cellIndex, size, direction);
-        ship.remove(); // Remove the ship from the selection area
-      } else {
-        alert("Cannot place ship here.");
-      }
-    }
-  
-    function canPlaceShipAt(index, size, direction, ships) {
-      // Implement your logic to check if a ship can be placed at the specified index
-      // This is a placeholder logic, replace with your actual logic
-      return true;
-    }
-  
-    function placeShip(shipId, startIndex, size, direction) {
-      const shipObject = userShips.find(s => s.name === shipId);
-      if (!shipObject) {
-        alert("Ship not found: " + shipId);
-        return;
-      }
-  
-      const newPositions = [];
-      for (let i = 0; i < size; i++) {
-        const index = direction === 'horizontal' ? startIndex + i : startIndex + i * 10;
-        if (index >= 100 || userBoard.children[index].classList.contains('ship')) {
-          alert("Invalid ship placement.");
-          return;
+    let pcShips = JSON.parse(JSON.stringify(userShips)); // Deep copy for simplicity
+    
+    const gridSize = 10; // 10x10 grid
+    let gameStarted = false;
+    
+    function createGrid(board) {
+        board.innerHTML = ''; // Clear previous grid
+        for (let i = 0; i < gridSize * gridSize; i++) {
+            const cell = document.createElement('div');
+            cell.dataset.index = i;
+            cell.classList.add('cell'); // Add cell class for styling
+            board.appendChild(cell);
         }
-        newPositions.push(index);
-      }
-  
-      newPositions.forEach(index => {
-        userBoard.children[index].classList.add('ship');
-        shipObject.positions.push(index);
-      });
-      shipObject.placed = true;
-  
-      if (userShips.every(ship => ship.placed)) {
-        info.textContent = "All ships placed. Start the game!";
-        // enablePCBoard(); // Uncomment this when the PC board is set up and ready for the game
-      }
     }
-  
-    function createGrid(board, isUser) {
-      for (let i = 0; i < 100; i++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.dataset.index = i;
-        board.appendChild(cell);
-      }
+    
+    function randomizeShips(ships, board) {
+        ships.forEach(ship => {
+            let placed = false;
+            while (!placed) {
+                const vertical = Math.random() >= 0.5;
+                const row = Math.floor(Math.random() * gridSize);
+                const col = Math.floor(Math.random() * gridSize);
+                const startIndex = vertical ? row * gridSize + col : col * gridSize + row;
+                if (canPlaceShip(startIndex, ship.size, vertical, ships)) {
+                    placeShip(startIndex, ship.size, vertical, ship, board);
+                    placed = true;
+                }
+            }
+        });
     }
-  
+    
+    function canPlaceShip(startIndex, size, vertical, ships) {
+        for (let i = 0; i < size; i++) {
+            const index = vertical ? startIndex + i * gridSize : startIndex + i;
+            if (index >= gridSize * gridSize || ships.some(s => s.positions.includes(index))) {
+                return false; // Ship out of bounds or overlaps
+            }
+            if (!vertical && Math.floor(index / gridSize) !== Math.floor(startIndex / gridSize)) {
+                return false; // Horizontal ship wraps to next row
+            }
+        }
+        return true;
+    }
+    
+    function placeShip(startIndex, size, vertical, ship, board) {
+        for (let i = 0; i < size; i++) {
+            const index = vertical ? startIndex + i * gridSize : startIndex + i;
+            if (board === userBoard) { // Only add the 'ship' class to userBoard cells
+                board.children[index].classList.add('ship');
+            }
+            ship.positions.push(index);
+        }
+        ship.placed = true;
+    }
+    
+    function handleAttack(e, index) {
+        if (gameStarted && !e.target.classList.contains('hit') && !e.target.classList.contains('miss')) {
+            const hit = pcShips.some(ship => ship.positions.includes(index));
+            e.target.classList.add(hit ? 'hit' : 'miss');
+            if (hit) {
+                updateShipStatus(index, pcShips);
+            }
+            checkGameOver();
+        }
+    }
+    
+    function updateShipStatus(index, ships) {
+        ships.forEach(ship => {
+            if (ship.positions.includes(index)) {
+                ship.hits += 1;
+                if (ship.hits === ship.size) {
+                    userInfo.textContent = `${ship.name} sunk!`;
+                    ship.sunk = true;
+                }
+            }
+        });
+    }
+    
+    function checkGameOver() {
+        if (pcShips.every(ship => ship.sunk)) {
+            userInfo.textContent = "Game Over! You win!";
+            gameStarted = false;
+        }
+    }
+    
     function initializeGame() {
-      userShips.forEach(ship => {
-        ship.positions = [];
-        ship.placed = false;
-      });
-      pcShips.forEach(ship => {
-        ship.positions = [];
-      });
-      gameEnded = false;
-      info.textContent = "Place your ships!";
-      // Clear the board visually
-      Array.from(userBoard.children).forEach(cell => cell.classList.remove('ship', 'hit', 'miss'));
-      Array.from(pcBoard.children).forEach(cell => cell.classList.remove('ship', 'hit', 'miss'));
+        createGrid(userBoard);
+        createGrid(pcBoard);
+        randomizeShips(pcShips, pcBoard); // Randomize PC ships, keeping them hidden
+        userShips.forEach(ship => {
+            ship.hits = 0;
+            ship.placed = false;
+            ship.positions = []; // Reset positions
+        });
+        gameStarted = true;
+        userInfo.textContent = "Place your ships!";
     }
-  
+    
     newGameBtn.addEventListener('click', initializeGame);
-  });
-  
+    
+    initializeGame(); // Start a new game on page load for demonstration
+});
