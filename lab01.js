@@ -1,115 +1,162 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userInfo = document.getElementById('user-info');
-    const userBoard = document.getElementById('user-board');
-    const pcBoard = document.getElementById('pc-board');
-    const newGameBtn = document.getElementById('new-game-btn');
+document.addEventListener('DOMContentLoaded', function() {
+    createGrid('playerGrid');
+    createGrid('computerGrid');
+    placeShips('playerGrid');
+    placeShips('computerGrid');
+    initializeGame();
 
-    let userShips = [
-        { name: "Carrier", size: 5, hits: 0, placed: false, positions: [] },
-        { name: "Battleship", size: 4, hits: 0, placed: false, positions: [] },
-        { name: "Cruiser", size: 3, hits: 0, placed: false, positions: [] },
-        { name: "Submarine", size: 3, hits: 0, placed: false, positions: [] },
-        { name: "Destroyer", size: 2, hits: 0, placed: false, positions: [] }
-    ];
-    let pcShips = JSON.parse(JSON.stringify(userShips)); // Deep copy for simplicity
-    
-    const gridSize = 10; // 10x10 grid
-    let gameStarted = false;
-    
-    function createGrid(board) {
-        board.innerHTML = ''; // Clear previous grid
-        for (let i = 0; i < gridSize * gridSize; i++) {
-            const cell = document.createElement('div');
-            cell.dataset.index = i;
-            cell.classList.add('cell'); // Add cell class for styling
-            board.appendChild(cell);
-        }
-    }
-    
-    function randomizeShips(ships, board) {
-        ships.forEach(ship => {
-            let placed = false;
-            while (!placed) {
-                const vertical = Math.random() >= 0.5;
-                const row = Math.floor(Math.random() * gridSize);
-                const col = Math.floor(Math.random() * gridSize);
-                const startIndex = vertical ? row * gridSize + col : col * gridSize + row;
-                if (canPlaceShip(startIndex, ship.size, vertical, ships)) {
-                    placeShip(startIndex, ship.size, vertical, ship, board);
-                    placed = true;
-                }
-            }
-        });
-    }
-    
-    function canPlaceShip(startIndex, size, vertical, ships) {
-        for (let i = 0; i < size; i++) {
-            const index = vertical ? startIndex + i * gridSize : startIndex + i;
-            if (index >= gridSize * gridSize || ships.some(s => s.positions.includes(index))) {
-                return false; // Ship out of bounds or overlaps
-            }
-            if (!vertical && Math.floor(index / gridSize) !== Math.floor(startIndex / gridSize)) {
-                return false; // Horizontal ship wraps to next row
-            }
-        }
-        return true;
-    }
-    
-    function placeShip(startIndex, size, vertical, ship, board) {
-        for (let i = 0; i < size; i++) {
-            const index = vertical ? startIndex + i * gridSize : startIndex + i;
-            if (board === userBoard) { // Only add the 'ship' class to userBoard cells
-                board.children[index].classList.add('ship');
-            }
-            ship.positions.push(index);
-        }
-        ship.placed = true;
-    }
-    
-    function handleAttack(e, index) {
-        if (gameStarted && !e.target.classList.contains('hit') && !e.target.classList.contains('miss')) {
-            const hit = pcShips.some(ship => ship.positions.includes(index));
-            e.target.classList.add(hit ? 'hit' : 'miss');
-            if (hit) {
-                updateShipStatus(index, pcShips);
-            }
-            checkGameOver();
-        }
-    }
-    
-    function updateShipStatus(index, ships) {
-        ships.forEach(ship => {
-            if (ship.positions.includes(index)) {
-                ship.hits += 1;
-                if (ship.hits === ship.size) {
-                    userInfo.textContent = `${ship.name} sunk!`;
-                    ship.sunk = true;
-                }
-            }
-        });
-    }
-    
-    function checkGameOver() {
-        if (pcShips.every(ship => ship.sunk)) {
-            userInfo.textContent = "Game Over! You win!";
-            gameStarted = false;
-        }
-    }
-    
-    function initializeGame() {
-        createGrid(userBoard);
-        createGrid(pcBoard);
-        randomizeShips(pcShips, pcBoard); // Randomize PC ships, keeping them hidden
-        userShips.forEach(ship => {
-            ship.hits = 0;
-            ship.placed = false;
-            ship.positions = []; // Reset positions
-        });
-        gameStarted = true;
-        userInfo.textContent = "Place your ships!";
-    }
-    
-    newGameBtn.addEventListener('click', initializeGame);
-    
-    initializeGame(); // Start a new game on page load for demonstration
+    const resetButton = document.getElementById('resetButton');
+    resetButton.addEventListener('click', resetGame);
 });
+
+function createGrid(gridId) {
+    const grid = document.getElementById(gridId);
+    for (let i = 0; i < 100; i++) {
+        let cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        grid.appendChild(cell);
+    }
+}
+
+function placeShips(gridId) {
+    const ships = [5, 4, 3, 3, 2];
+    ships.forEach(shipSize => {
+        let placed = false;
+        while (!placed) {
+            placed = placeSingleShip(document.getElementById(gridId), shipSize);
+        }
+    });
+}
+
+function placeSingleShip(grid, shipSize) {
+    let placed = false;
+    while (!placed) {
+        let orientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+        let randomCell = Math.floor(Math.random() * 100);
+        let row = Math.floor(randomCell / 10);
+        let col = randomCell % 10;
+
+        if ((orientation === 'horizontal' && col <= 10 - shipSize) ||
+            (orientation === 'vertical' && row <= 10 - shipSize)) {
+            let canPlaceShip = true;
+
+            for (let i = 0; i < shipSize; i++) {
+                let index = orientation === 'horizontal' ? randomCell + i : randomCell + i * 10;
+                if (grid.children[index].classList.contains('occupied')) {
+                    canPlaceShip = false;
+                    break;
+                }
+            }
+
+            if (canPlaceShip) {
+                for (let i = 0; i < shipSize; i++) {
+                    let index = orientation === 'horizontal' ? randomCell + i : randomCell + i * 10;
+                    grid.children[index].classList.add('occupied', `ship-${shipSize}`);
+                }
+                placed = true;
+            }
+        }
+    }
+    return placed;
+}
+
+function initializeGame() {
+    const computerCells = document.querySelectorAll('#computerGrid .cell');
+    computerCells.forEach(cell => {
+        cell.addEventListener('click', playerAttack);
+    });
+}
+
+// Keep track of the hits and misses
+let playerHits = 0;
+let playerMisses = 0;
+let computerHits = 0;
+let computerMisses = 0;
+
+function playerAttack(event) {
+    const cell = event.target;
+    if (cell.classList.contains('hit') || cell.classList.contains('miss')) {
+        return;
+    }
+
+    if (cell.classList.contains('occupied')) {
+        cell.classList.add('hit');
+        playerHits++;
+        updateStats('player');
+        if (checkWin('computerGrid')) {
+            endGame(true);
+            return;
+        }
+    } else {
+        cell.classList.add('miss');
+        playerMisses++;
+        updateStats('player');
+    }
+
+    cell.removeEventListener('click', playerAttack);
+    setTimeout(computerTurn, 1000);
+}
+
+function computerTurn() {
+    let attackMade = false;
+    const playerCells = document.querySelectorAll('#playerGrid .cell');
+    while (!attackMade) {
+        const randomIndex = Math.floor(Math.random() * playerCells.length);
+        const cell = playerCells[randomIndex];
+
+        if (!cell.classList.contains('hit') && !cell.classList.contains('miss')) {
+            if (cell.classList.contains('occupied')) {
+                cell.classList.add('hit');
+                computerHits++;
+                updateStats('computer');
+                if (checkWin('playerGrid')) {
+                    endGame(false);
+                    return;
+                }
+            } else {
+                cell.classList.add('miss');
+                computerMisses++;
+                updateStats('computer');
+            }
+            attackMade = true;
+        }
+    }
+}
+
+function checkWin(gridId) {
+    const ships = [5, 4, 3, 3, 2];
+    for (const shipSize of ships) {
+        const shipCells = document.querySelectorAll(`#${gridId} .cell.occupied.ship-${shipSize}`);
+        if (!Array.from(shipCells).every(cell => cell.classList.contains('hit'))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function endGame(playerWins) {
+    const gameStatus = document.getElementById('gameStatus');
+    const message = playerWins ? 'Congratulations, you win!' : 'Game over, you lose!';
+    
+    gameStatus.textContent = message;
+    gameStatus.style.display = 'block';
+    
+    document.querySelectorAll('#computerGrid .cell').forEach(cell => {
+        cell.removeEventListener('click', playerAttack);
+    });
+}
+
+function resetGame() {
+    window.location.reload(); // This will reload the page, consider implementing a more nuanced reset functionality
+}
+
+function updateStats(playerType) {
+    if (playerType === 'player') {
+        document.getElementById('playerHits').textContent = `Player Hits: ${playerHits}`;
+        document.getElementById('playerMisses').textContent = `Player Misses: ${playerMisses}`;
+    } else if (playerType === 'computer') {
+        document.getElementById('computerHits').textContent = `Computer Hits: ${computerHits}`;
+        document.getElementById('computerMisses').textContent = `Computer Misses: ${computerMisses}`;
+    }
+}

@@ -1,91 +1,98 @@
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  background-color:#F4EEFF;
   margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
 }
 
-#game-container {
+#messageArea {
+  background-color: #DCD6F7;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+}
+
+#gameArea {
+  display: flex;
+  justify-content: center; 
+  margin: 20px 0; 
+  gap: 20px; 
+}
+
+.table {
+  display: flex;
+  flex-wrap: wrap;
+  width: calc(30px * 10); 
+  height: calc(30px * 10); 
+  border: 1px solid #000; 
+  background-color: #A6B1E1; 
+}
+
+.cell {
+  width: 30px;
+  height: 30px;
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+  box-sizing: border-box;
+}
+
+.table .cell:nth-child(10n) {
+  border-right: none;
+}
+
+.table .cell:nth-last-child(-n+10) {
+  border-bottom: none;
+}
+
+.hit {
+  background-color: red;
+  background-size: cover;
+}
+
+.miss {
+  background-color: grey 
+}
+
+
+.table:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+#resetButton {
+  padding: 10px 20px;
+  background-color: #424874;
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+#resetButton:hover {
+  background-color: #272b45;
+}
+
+#resetButton:active {
+  background-color: #272b45; 
+}
+
+#stats {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  margin-top: 20px;
+}
+
+#playerStats, #computerStats {
   text-align: center;
 }
 
-.board-container {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-}
-
-.board {
-  width: 300px;
-  height: 300px;
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
-  border: 2px solid #333;
-  background-color: #fff;
-}
-
-.board .cell {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #ddd;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-/* The ship class is used for draggable ship elements */
-.ship {
-  cursor: move;
-  padding: 5px 10px;
-  margin: 5px;
-  background-color: #444;
-  color: #fff;
-  border-radius: 4px;
-}
-
-/* The ship class is used for cells that are part of a ship on the user's board */
-.cell.ship {
-  background-color: #5f9ea0;
-}
-
-/* Styles for hit and miss */
-.cell.hit {
-  background-color: red;
-}
-
-.cell.miss {
-  background-color: #bbb;
-}
-
-#ships-container {
-  margin-bottom: 20px;
-}
-
-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  margin: 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  outline: none;
-}
-
-button:active {
-  background-color: #0056b3;
-}
-
-button:focus {
-  outline: none;
-}
-
-#info {
-  margin: 10px 0;
-  padding: 10px;
-  background-color: #ffffe0;
-  border: 1px solid #ddd;
-}

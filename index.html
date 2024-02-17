@@ -1,29 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Battleship Game</title>
-  <link rel="stylesheet" href="lab01.css"> <!-- Update this to the path of your CSS file -->
+    <link rel="stylesheet" href="lab01.css">
+    <title>Battleship</title>
 </head>
 <body>
-  <div id="game-container">
-    <button id="toggle-direction-btn">Toggle Direction (Horizontal)</button>
-    <div id="ships-container">
-      <div id="carrier" draggable="true" class="ship" data-length="5">Carrier</div>
-      <div id="battleship" draggable="true" class="ship" data-length="4">Battleship</div>
-      <div id="cruiser" draggable="true" class="ship" data-length="3">Cruiser</div>
-      <div id="submarine" draggable="true" class="ship" data-length="3">Submarine</div>
-      <div id="destroyer" draggable="true" class="ship" data-length="2">Destroyer</div>
+    <h1>Battleship</h1>
+    <div id="messageArea">
+        <h2>Let's play the game!!</h2>
     </div>
-    <div class="board-container">
-      <div class="board" id="user-board"></div>
-      <div class="board" id="pc-board"></div>
+
+    <div id="gameArea">
+        <div class="table" id="playerGrid"></div>
+        <div class="table" id="computerGrid"></div>
     </div>
-    <div id="info">Place your ships</div>
-    <button id="new-game-btn">New Game</button>
-  </div>
-  <script src="lab01.js"></script> <!-- Update this to the path of your JavaScript file -->
+
+    <div id="resetButton"> Reset Game</div>
+    <div id="gameStatus"></div>
+
+    <div id="stats">
+        <div id="playerStats">
+            <h3>Player Stats</h3>
+            <p>Hits: <span id="playerHits">0</span></p>
+            <p>Misses: <span id="playerMisses">0</span></p>
+        </div>
+        <div id="computerStats">
+            <h3>Computer Stats</h3>
+            <p>Hits: <span id="computerHits">0</span></p>
+            <p>Misses: <span id="computerMisses">0</span></p>
+        </div>
+    </div>
+    
+
+    <script src="lab01.js"></script>
 </body>
 </html>
-
